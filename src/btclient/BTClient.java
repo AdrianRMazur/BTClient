@@ -17,7 +17,6 @@ public class BTClient {
 
 	public static void main(String[] args) {
 
-		
 		if (args.length!=2){
 			System.out.println("Error: Provide torrent file name and save file name. \n");
 			System.exit(1);
@@ -25,34 +24,33 @@ public class BTClient {
 		
 		DataInputStream input = null; 
 		File inputtorrent = new File (args[0]);
-		
-		
 		int torrentsize = (int) inputtorrent.length();
+		
 		if (torrentsize > 1000000){
 			System.out.println("Error: File size too large");
 			System.exit(1);
 		}
-		byte[] torrentdata = new byte[torrentsize];
 		
+		byte[] torrentbyte = new byte[torrentsize];
+		TorrentInfo torrentinfo = null; 
 		
 		try {
 			input = new DataInputStream (new BufferedInputStream(new FileInputStream(inputtorrent)));
-			input.read(torrentdata);
+			input.read(torrentbyte);
+			torrentinfo = new TorrentInfo(torrentbyte);
 		} catch (FileNotFoundException e2) {
 			e2.printStackTrace();
 			closer(); 
 		} catch (IOException e) {
 			e.printStackTrace();
 			closer(); 
-		}
-		
-		
-		try {
-			TorrentInfo torrentinfo = new TorrentInfo(torrentdata);
 		} catch (BencodingException e) {
 			e.printStackTrace();
 			closer(); 
 		}
+
+		//good shit
+		System.out.println(torrentinfo.file_name);
 
 		
 		
