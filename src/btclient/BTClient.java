@@ -1,7 +1,10 @@
 package btclient;
 
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,43 +23,49 @@ public class BTClient {
 			System.exit(1);
 		} 
 		
-		File torrent = new File (args[0]);
-		Scanner filescanner;
-		try {
-			 filescanner = new Scanner (torrent);
-		} catch (FileNotFoundException e1) {
-			System.out.println("Error: File read error");
-			e1.printStackTrace();
+		DataInputStream input = null; 
+		File inputtorrent = new File (args[0]);
+		
+		
+		int torrentsize = (int) inputtorrent.length();
+		if (torrentsize > 1000000){
+			System.out.println("Error: File size too large");
 			System.exit(1);
 		}
-		
-		int torrentsize = (int) torrent.length();
 		byte[] torrentdata = new byte[torrentsize];
 		
-		Path path = Paths.get(args[0]);
+		
 		try {
-			torrentdata = Files.readAllBytes(path);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			input = new DataInputStream (new BufferedInputStream(new FileInputStream(inputtorrent)));
+			input.read(torrentdata);
+		} catch (FileNotFoundException e2) {
+			e2.printStackTrace();
+			closer(); 
+		} catch (IOException e) {
+			e.printStackTrace();
+			closer(); 
 		}
 		
 		
-		
 		try {
-			ByteBuffer temp = Bencoder2.getInfoBytes(torrentdata);
+			TorrentInfo torrentinfo = new TorrentInfo(torrentdata);
 		} catch (BencodingException e) {
 			e.printStackTrace();
-			System.out.println("Error: File cannot be decoded");
-			System.exit(1);
+			closer(); 
 		}
+
 		
+		
+	
 		System.out.println("sdfsdfdsf");
 		
 		
 		
 	}
-
-
-
+	
+	private static void closer(){
+		System.out.println("Error: A critical error occured");
+		System.exit(1);
+	}
+	
 }
