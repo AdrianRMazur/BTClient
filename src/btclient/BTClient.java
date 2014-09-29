@@ -7,10 +7,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Scanner;
 
 public class BTClient {
@@ -49,13 +52,22 @@ public class BTClient {
 			closer(); 
 		}
 
+		
+		URL url = torrentinfo.announce_url; 
+		String ip = url.getHost(); 
+		int port = url.getPort();
+	
+		
+	
+		
 		//good shit
-		System.out.println(torrentinfo.file_name);
+		System.out.println("path is: " + ip + "\n port is: " + port);
+		
 
 		
 		
 	
-		System.out.println("sdfsdfdsf");
+		//System.out.println("sdfsdfdsf");
 		
 		
 		
