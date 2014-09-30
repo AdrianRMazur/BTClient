@@ -21,7 +21,7 @@ import java.util.Scanner;
 
 public class BTClient {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		if (args.length!=2){
 			System.out.println("Error: Provide torrent file name and save file name. \n");
@@ -59,14 +59,15 @@ public class BTClient {
 		URL url = torrentinfo.announce_url; 
 		String ip = url.getHost(); 
 		int port = url.getPort();
-	
+		Object q=url.getContent();
+		
 	
 		
 		HttpURLConnection con =null;
 		BufferedReader in = null;
 		String inputLine;
 		StringBuffer response = new StringBuffer();
-		try {
+		/*try {
 			con = (HttpURLConnection) url.openConnection();
 			con.setRequestMethod("GET");
 			int responseCode = con.getResponseCode();
@@ -80,14 +81,14 @@ public class BTClient {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	
 	
 		System.out.println(response.toString());
 
 		
 		//good shit
-		System.out.println("path is: " + ip + "\n port is: " + port);
+		System.out.println("path is: " + ip + "\n Q is: " + q);
 		
 
 		
