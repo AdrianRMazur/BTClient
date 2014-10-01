@@ -13,6 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,20 +60,34 @@ public class BTClient {
 		URL url = torrentinfo.announce_url; 
 		String ip = url.getHost(); 
 		int port = url.getPort();
-		Object q=url.getContent();
-		
+	
+		String x= torrentinfo.file_name;
 	
 		
 		HttpURLConnection con =null;
 		BufferedReader in = null;
 		String inputLine;
 		StringBuffer response = new StringBuffer();
-		/*try {
+		
+		
+		/*
+		 * public static String byteArrayToHex(byte[] a) {
+   StringBuilder sb = new StringBuilder(a.length * 2);
+   for(byte b: a)
+      sb.append(String.format("%02x", b & 0xff));
+   return sb.toString();
+}
+		 * */
+		
+		
+		
+		try {
+
 			con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod("GET");
-			int responseCode = con.getResponseCode();
+			
 			in = new BufferedReader( new InputStreamReader(con.getInputStream()));
-			 
+			
+			int responseCode = con.getResponseCode();
 			while ((inputLine = in.readLine()) != null) {
 				response.append(inputLine);
 			}
@@ -81,14 +96,14 @@ public class BTClient {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 	
 	
 		System.out.println(response.toString());
 
 		
 		//good shit
-		System.out.println("path is: " + ip + "\n Q is: " + q);
+		System.out.println("path is: " + ip + "\n number is: " + port);
 		
 
 		
