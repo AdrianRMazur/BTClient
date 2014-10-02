@@ -81,7 +81,7 @@ public class BTClient {
 			 temp.append('%').append(String.format("%02x", temp2 & 0xff));
 		infohash = temp.toString(); 
 	
-		temp = new StringBuilder(("adriankosti".getBytes().length) * 2);
+		temp = new StringBuilder(("AdrianAndKosti".getBytes().length) * 2);
 		for(byte temp2: torrentinfo.info_hash.array())
 			 temp.append('%').append(String.format("%02x", temp2 & 0xff));
 		peerid = temp.toString(); 
