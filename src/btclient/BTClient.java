@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -47,73 +48,98 @@ public class BTClient {
 			torrentinfo = new TorrentInfo(torrentbyte);
 		} catch (FileNotFoundException e2) {
 			e2.printStackTrace();
+			input.close(); 
 			closer(); 
 		} catch (IOException e) {
 			e.printStackTrace();
+			input.close(); 
 			closer(); 
 		} catch (BencodingException e) {
 			e.printStackTrace();
+			input.close(); 
 			closer(); 
 		}
 
+	
+		StringBuffer serverreply = EstablishConnection(torrentinfo);
+		if (serverreply == null){
+			input.close();
+			System.exit(1);
+		}
 		
-		URL url = torrentinfo.announce_url; 
-		String ip = url.getHost(); 
-		int port = url.getPort();
+	}
 	
-		String x= torrentinfo.file_name;
 	
+	private static StringBuffer EstablishConnection(TorrentInfo torrentinfo){
+			
+		String infohash, peerid, urlstring;
+		StringBuilder temp; 
+		
+		
+		temp = new StringBuilder((torrentinfo.info_hash.array().length) * 2);
+		for(byte temp2: torrentinfo.info_hash.array())
+			 temp.append('%').append(String.format("%02x", temp2 & 0xff));
+		infohash = temp.toString(); 
+	
+		temp = new StringBuilder(("adriankosti".getBytes().length) * 2);
+		for(byte temp2: torrentinfo.info_hash.array())
+			 temp.append('%').append(String.format("%02x", temp2 & 0xff));
+		peerid = temp.toString(); 
+
+		urlstring = torrentinfo.announce_url.toString() + "?info_hash=" + infohash + "&peer_id="+peerid + "&port=6885&uploaded=0&downloaded=0&left=" +torrentinfo.file_length ; 
+		
+		URL url;
+		try {
+			url = new URL (urlstring);
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+			closer();
+			return null; 
+		}
+
 		
 		HttpURLConnection con =null;
 		BufferedReader in = null;
-		String inputLine;
-		StringBuffer response = new StringBuffer();
-		
-		
-		/*
-		 * public static String byteArrayToHex(byte[] a) {
-   StringBuilder sb = new StringBuilder(a.length * 2);
-   for(byte b: a)
-      sb.append(String.format("%02x", b & 0xff));
-   return sb.toString();
-}
-		 * */
-		
-		
-		
+		String tempinput=null;
+		StringBuffer serverreply = new StringBuffer();
+		int responsecode =0; 
 		try {
-
 			con = (HttpURLConnection) url.openConnection();
-			
 			in = new BufferedReader( new InputStreamReader(con.getInputStream()));
+	
 			
-			int responseCode = con.getResponseCode();
-			while ((inputLine = in.readLine()) != null) {
-				response.append(inputLine);
-			}
+			responsecode = con.getResponseCode();
+			
+			//responsebytes = new byte[con.getContentLength()];
+			
+			while ((tempinput = in.readLine()) != null) {
+				serverreply.append(tempinput);
+			} 
+			
 			in.close();
 		
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			closer(); 
+			return null; 
 		}
-	
-	
-		System.out.println(response.toString());
 
+		System.out.println("server returned code is: " + responsecode);
 		
-		//good shit
-		System.out.println("path is: " + ip + "\n number is: " + port);
-		
-
-		
-		
-	
-		//System.out.println("sdfsdfdsf");
-		
-		
+		return serverreply;
 		
 	}
+	
+	
+	  public static String byteArrayToHex(byte[] a) {
+		 StringBuilder sb = new StringBuilder(a.length * 2);
+		 for(byte b: a)
+			 sb.append('%').append(String.format("%02x", b & 0xff));
+		 return sb.toString();
+	  }
+	  
+	
+
 	
 	private static void closer(){
 		System.out.println("Error: A critical error occured");
