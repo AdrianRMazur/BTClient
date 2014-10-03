@@ -83,11 +83,10 @@ public class BTClient {
 			e.printStackTrace();
 		} 
 		
-		
-		ByteBuffer x = (ByteBuffer)obj.get(ByteBuffer.wrap(new byte[] {
-				'p','e','e','r','s'})); 
+		ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[] {
+				'p', 'e', 'e', 'r', 's' });
 
-		
+		ByteBuffer x = (ByteBuffer)obj.get(KEY_PEERS);
 		
 		String peeraddr= x.toString();
 		
