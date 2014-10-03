@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -74,19 +75,23 @@ public class BTClient {
 	
 	private static StringBuffer validatePeers (byte [] fromServer1){
 		System.out.println("LOLOLOLOLOL");
-		Map<ByteBuffer,Object> obj = null;
+		HashMap<ByteBuffer,Object> obj = null;
 		try {
-			obj=(Map<ByteBuffer, Object>)Bencoder2.decode(fromServer1);
+			obj=(HashMap<ByteBuffer, Object>)Bencoder2.decode(fromServer1);
 		} catch (BencodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 		
-		ByteBuffer x = (ByteBuffer)obj.get("peers"); 
 		
-		//Peer peer
+		ByteBuffer x = (ByteBuffer)obj.get(ByteBuffer.wrap(new byte[] {
+				'p','e','e','r','s'})); 
+
 		
-		//Socket toPeers= new Socket(); 
+		
+		String peeraddr= x.toString();
+		
+		
 		
 		ToolKit.print(obj);
 		
