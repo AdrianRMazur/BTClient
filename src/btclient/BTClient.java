@@ -62,7 +62,7 @@ public class BTClient {
 		}
 
 	
-		StringBuffer serverreply = EstablishConnection(torrentinfo);
+		byte [] serverreply = EstablishConnection(torrentinfo);
 		if (serverreply == null){
 			input.close();
 			System.exit(1);
@@ -72,11 +72,11 @@ public class BTClient {
 		
 	}
 	
-	private static StringBuffer validatePeers (StringBuffer fromServer1){
+	private static StringBuffer validatePeers (byte [] fromServer1){
 		System.out.println("LOLOLOLOLOL");
 		Map<ByteBuffer,Object> obj = null;
 		try {
-			obj=(Map<ByteBuffer, Object>)Bencoder2.decode(fromServer1.toString().getBytes());
+			obj=(Map<ByteBuffer, Object>)Bencoder2.decode(fromServer1);
 		} catch (BencodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -94,7 +94,7 @@ public class BTClient {
 	}
 	
 	
-	private static StringBuffer EstablishConnection(TorrentInfo torrentinfo){
+	private static byte [] EstablishConnection(TorrentInfo torrentinfo){
 			
 		String infohash, peerid, urlstring;
 		StringBuilder temp; 
@@ -123,23 +123,26 @@ public class BTClient {
 
 		
 		HttpURLConnection con =null;
-		BufferedReader in = null;
+		DataInputStream in = null;
 		String tempinput=null;
-		StringBuffer serverreply = new StringBuffer();
-		int responsecode =0; 
+		
+		//int responsecode =0; 
+		byte [] serverreply = null; 
 		
 		try {
 			con = (HttpURLConnection) url.openConnection();
-			in = new BufferedReader( new InputStreamReader(con.getInputStream()));
+			in = new DataInputStream( con.getInputStream());
 	
 			
-			responsecode = con.getResponseCode();
+			//responsecode = con.getResponseCode();
 			
-			//responsebytes = new byte[con.getContentLength()];
+			serverreply = new byte[con.getContentLength()];
+			in.readFully(serverreply);
 			
-			while ((tempinput = in.readLine()) != null) {
-				serverreply.append(tempinput);
-			} 
+			
+			//while ((tempinput = in.readLine()) != null) {
+			//	serverreply.append(tempinput);
+			//} 
 			
 			in.close();
 		
