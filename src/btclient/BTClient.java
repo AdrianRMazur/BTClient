@@ -19,13 +19,14 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 public class BTClient {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 
 		if (args.length!=2){
 			System.out.println("Error: Provide torrent file name and save file name. \n");
@@ -73,26 +74,26 @@ public class BTClient {
 		
 	}
 	
-	private static StringBuffer validatePeers (byte [] fromServer1){
+	private static StringBuffer validatePeers (byte [] fromServer1) throws Exception{
 		System.out.println("LOLOLOLOLOL");
-		HashMap<ByteBuffer,Object> obj = null;
+		Map<ByteBuffer,Object> obj = null;
 		try {
-			obj=(HashMap<ByteBuffer, Object>)Bencoder2.decode(fromServer1);
+		
+			obj=(Map<ByteBuffer, Object>)Bencoder2.decode(fromServer1);
 		} catch (BencodingException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} 
 		
-		ByteBuffer KEY_PEERS = ByteBuffer.wrap(new byte[] {
-				'p', 'e', 'e', 'r', 's' });
-
-		ByteBuffer x = (ByteBuffer)obj.get(KEY_PEERS);
-		
-		String peeraddr= x.toString();
 		
 		
+		ArrayList availablepeers = (ArrayList)obj.get(ByteBuffer.wrap(new byte [] {'p','e','e','r','s'}));
 		
-		ToolKit.print(obj);
+		Map<ByteBuffer, Object> firstpeer = (Map<ByteBuffer, Object>) availablepeers.get(0);
+		
+		int peerport = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'p','o','r','t'})));
+		String peerip = new String (((ByteBuffer) firstpeer.get((ByteBuffer.wrap(new byte [] {'i','p'})))).array(), "ASCII");
+		
 		
 		return null; 
 	}
