@@ -67,17 +67,30 @@ public class BTClient {
 			input.close();
 			System.exit(1);
 		}
-
 		
+		validatePeers(serverreply);
 		
 	}
 	
-	private StringBuffer validatePeers (StringBuffer fromServer){
+	private static StringBuffer validatePeers (StringBuffer fromServer1){
+		System.out.println("LOLOLOLOLOL");
+		Map<ByteBuffer,Object> obj = null;
+		try {
+			obj=(Map<ByteBuffer, Object>)Bencoder2.decode(fromServer1.toString().getBytes());
+		} catch (BencodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 		
-		Bencoder2.decode(fromServer.getBytes(Charset.forName("UTF-8"))); 
+		ByteBuffer x = (ByteBuffer)obj.get("peers"); 
+		
+		//Peer peer
+		
 		//Socket toPeers= new Socket(); 
 		
-		return fromServer; 
+		ToolKit.print(obj);
+		
+		return null; 
 	}
 	
 	
