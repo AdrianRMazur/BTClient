@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.Socket;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -66,7 +67,17 @@ public class BTClient {
 			input.close();
 			System.exit(1);
 		}
+
 		
+		
+	}
+	
+	private StringBuffer validatePeers (StringBuffer fromServer){
+		
+		Bencoder2.decode(fromServer.getBytes(Charset.forName("UTF-8"))); 
+		//Socket toPeers= new Socket(); 
+		
+		return fromServer; 
 	}
 	
 	
@@ -103,6 +114,7 @@ public class BTClient {
 		String tempinput=null;
 		StringBuffer serverreply = new StringBuffer();
 		int responsecode =0; 
+		
 		try {
 			con = (HttpURLConnection) url.openConnection();
 			in = new BufferedReader( new InputStreamReader(con.getInputStream()));
@@ -123,8 +135,13 @@ public class BTClient {
 			closer(); 
 			return null; 
 		}
-
+		/*
 		System.out.println("server returned code is: " + responsecode);
+		System.out.println("Server: "+ serverreply.toString());
+		Looks good, makes connection and returns peer information
+		*
+		*/
+		con.disconnect(); 
 		
 		return serverreply;
 		
