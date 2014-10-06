@@ -70,14 +70,20 @@ public class BTClient {
 			closer(); 
 		}
 		
-		StringBuffer idk = validatePeers(serverreply,torrentinfo);
-		if (idk == null){
+		
+		if ( validatePeers(serverreply,torrentinfo) == false){
 			closer(); 
 		}
 		
+		
+		
 	}
 	
-	private static StringBuffer validatePeers (byte [] fromServer1, TorrentInfo torrentinfo) throws Exception{
+	
+
+	
+	
+	private static boolean validatePeers (byte [] fromServer1, TorrentInfo torrentinfo) throws Exception{
 		System.out.println("LOLOLOLOLOL");
 		Map<ByteBuffer,Object> obj = null;
 		try {
@@ -125,13 +131,16 @@ public class BTClient {
 		
 		// if not equal then handshake failed
 		if (Arrays.equals(infohashpart, torrentinfo.info_hash.array()) == false){
-			return null; 
+			return false; 
 		}
 		
+		// file download begins here...
 		
 		
 		
-		return null; 
+		
+		
+		return true; 
 	}
 	
 	
