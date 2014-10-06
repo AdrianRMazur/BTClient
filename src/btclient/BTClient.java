@@ -72,11 +72,11 @@ public class BTClient {
 			System.exit(1);
 		}
 		
-		validatePeers(serverreply);
+		validatePeers(serverreply,torrentinfo);
 		
 	}
 	
-	private static StringBuffer validatePeers (byte [] fromServer1) throws Exception{
+	private static StringBuffer validatePeers (byte [] fromServer1, TorrentInfo torrentinfo) throws Exception{
 		System.out.println("LOLOLOLOLOL");
 		Map<ByteBuffer,Object> obj = null;
 		try {
@@ -104,6 +104,16 @@ public class BTClient {
 		OutputStream output = s.getOutputStream(); 
 		DataOutputStream dataout= new DataOutputStream(output);
 		DataInputStream datain=new DataInputStream(input); 
+		byte[] toShake=new byte[100]; 
+		toShake[0]= (byte) 19;
+		System.arraycopy("BitTorrent protocol".getBytes(), 0, toShake, 1, 19); 
+		System.arraycopy(torrentinfo.info_hash, 0, toShake, 28, 20); 
+		/*peerid goes HERE*/
+		dataout.write((byte) 19);
+		byte[] fromShake=new byte[100]; 
+		datain.readFully(fromShake); 
+		
+		
 		
 		
 		return null; 
