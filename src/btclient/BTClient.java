@@ -1,6 +1,7 @@
 package btclient;
 
-
+import java.io.DataOutputStream;
+import java.io.InputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -9,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -93,6 +95,15 @@ public class BTClient {
 		
 		int peerport = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'p','o','r','t'})));
 		String peerip = new String (((ByteBuffer) firstpeer.get((ByteBuffer.wrap(new byte [] {'i','p'})))).array(), "ASCII");
+		
+		
+		/*lets start making a socket*/
+		Socket s = new Socket();
+
+		InputStream input= s.getInputStream();
+		OutputStream output = s.getOutputStream(); 
+		DataOutputStream dataout= new DataOutputStream(output);
+		DataInputStream datain=new DataInputStream(input); 
 		
 		
 		return null; 
