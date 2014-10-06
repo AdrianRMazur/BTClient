@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -51,28 +52,28 @@ public class BTClient {
 			input = new DataInputStream (new BufferedInputStream(new FileInputStream(inputtorrent)));
 			input.read(torrentbyte);
 			torrentinfo = new TorrentInfo(torrentbyte);
+			input.close(); 
 		} catch (FileNotFoundException e2) {
 			e2.printStackTrace();
-			input.close(); 
 			closer(); 
 		} catch (IOException e) {
 			e.printStackTrace();
-			input.close(); 
 			closer(); 
 		} catch (BencodingException e) {
 			e.printStackTrace();
-			input.close(); 
 			closer(); 
 		}
 
 	
 		byte [] serverreply = EstablishConnection(torrentinfo);
 		if (serverreply == null){
-			input.close();
-			System.exit(1);
+			closer(); 
 		}
 		
-		validatePeers(serverreply,torrentinfo);
+		StringBuffer idk = validatePeers(serverreply,torrentinfo);
+		if (idk == null){
+			closer(); 
+		}
 		
 	}
 	
@@ -98,20 +99,34 @@ public class BTClient {
 		
 		
 		/*lets start making a socket*/
-		Socket s = new Socket();
+		
+		// looks too copied. gonna have to change some shit up
+		
+		Socket s = new Socket(peerip, peerport);
 
 		InputStream input= s.getInputStream();
 		OutputStream output = s.getOutputStream(); 
 		DataOutputStream dataout= new DataOutputStream(output);
-		DataInputStream datain=new DataInputStream(input); 
+		DataInputStream datain=new DataInputStream(input);
+		
+	
 		byte[] toShake=new byte[100]; 
 		toShake[0]= (byte) 19;
 		System.arraycopy("BitTorrent protocol".getBytes(), 0, toShake, 1, 19); 
-		System.arraycopy(torrentinfo.info_hash, 0, toShake, 28, 20); 
-		/*peerid goes HERE*/
-		dataout.write((byte) 19);
+		System.arraycopy(torrentinfo.info_hash.array(), 0, toShake, 28, 20); 
+		System.arraycopy("AdrianAndKosti".getBytes(), 0, toShake, 48, 14 );
+		
+		dataout.write(toShake);
+		
 		byte[] fromShake=new byte[100]; 
 		datain.readFully(fromShake); 
+		
+		byte[] infohashpart = Arrays.copyOfRange(fromShake, 28, 48);
+		
+		// if not equal then handshake failed
+		if (Arrays.equals(infohashpart, torrentinfo.info_hash.array()) == false){
+			return null; 
+		}
 		
 		
 		
