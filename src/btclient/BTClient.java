@@ -1,6 +1,7 @@
 package btclient;
 
 import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -17,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,12 +31,16 @@ import java.util.Scanner;
 
 public class BTClient {
 
+	private static FileOutputStream savefile = null; 
+	
 	public static void main(String[] args) throws Exception {
 
 		if (args.length!=2){
 			System.out.println("Error: Provide torrent file name and save file name. \n");
 			System.exit(1);
 		} 
+		
+		savefile = new FileOutputStream(new File(args[1]));
 		
 		DataInputStream input = null; 
 		File inputtorrent = new File (args[0]);
@@ -102,7 +108,7 @@ public class BTClient {
 		
 		int peerport = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'p','o','r','t'})));
 		String peerip = new String (((ByteBuffer) firstpeer.get((ByteBuffer.wrap(new byte [] {'i','p'})))).array(), "ASCII");
-		
+		int interval = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'i', 'n','t','e','r','v','a','l'})));
 		
 		/*lets start making a socket*/
 		
@@ -126,6 +132,8 @@ public class BTClient {
 		System.arraycopy("AdrianAndKosti".getBytes(), 0, toShake, 48, 14 );
 		
 		dataout.write(toShake);
+		dataout.flush(); 
+		s.setSoTimeout(interval);
 		
 		byte[] fromShake=new byte[100]; 
 		datain.readFully(fromShake); 
@@ -139,8 +147,122 @@ public class BTClient {
 		
 		// file download begins here...
 		
+		boolean unchoke = false; 
+		
+		// calculates the length of the last piece 
+		int lastpiecelength = torrentinfo.file_length - (torrentinfo.piece_length * (torrentinfo.piece_hashes.length-1));
+		
+		// tell the peer im interested
+		// 	loop until peer says unchoke
+		while (unchoke == false ){
+			byte [] interestedprefix = toEndianArray(1);
+			byte [] interested = new byte [5];
+			System.arraycopy(interestedprefix, 0, interested, 0, 4);
+			interested[4] = (byte) 2;
+		
+			dataout.write(interested);
+			dataout.flush(); 
+			s.setSoTimeout(interval);
 		
 		
+		
+			// check ID if the peer is saying to unchoke
+			for (int c = 0; c<5; c++){
+				if(datain.readByte()==1 && c ==4){
+					unchoke = true; 
+				}
+			}
+		}
+		
+		// peer is ready
+		
+	
+		
+		 
+		
+		// loop for each block 
+		for (int count = 0; count <torrentinfo.piece_hashes.length; count++){
+			int temp = 0; 
+			// current block might have more data 
+			for (;;){
+				// building request message
+				byte [] msgrequestprefix = toEndianArray(16384);
+				byte [] msgrequest = new byte [17];
+				System.arraycopy(msgrequestprefix, 0, msgrequest, 0, 4);
+				msgrequest[4] = (byte)6;
+				// all the block 
+				if (count < torrentinfo.piece_hashes.length){
+					// build the message
+					System.arraycopy(toEndianArray(count), 0, msgrequest, 5, 4);
+					System.arraycopy(toEndianArray(temp), 0, msgrequest, 9, 4);
+					System.arraycopy(toEndianArray(16384), 0, msgrequest, 13, 4);
+					
+					// send it
+					dataout.write(msgrequest);
+					dataout.flush();
+					s.setSoTimeout(interval);
+					
+					// just cycles through the garbage thats returned 
+					for (int c = 0; c < 13; c++) {
+						datain.readByte();
+					}
+					
+					// the part we need
+					byte [] peerresponse = new byte [16384];
+					for (int c = 0; c< 16384; c++){
+						peerresponse [c] = datain.readByte();
+					}
+					// write to file
+					savefile.write(peerresponse);
+				
+					//might not need this if/else pair idk yet
+					if (temp + 16384 == torrentinfo.piece_length)
+						break; 
+					else
+						temp = temp + 16384; 
+				}
+				// the last block 
+				else {
+					int size = 16384;  
+					if (lastpiecelength < 16384)
+						size = lastpiecelength; 
+					
+					lastpiecelength = lastpiecelength - 16384;
+					
+					System.arraycopy(toEndianArray(count), 0, msgrequest, 5, 4);
+					System.arraycopy(toEndianArray(temp), 0, msgrequest, 9, 4);
+					System.arraycopy(toEndianArray(16384), 0, msgrequest, 13, 4);
+					
+					dataout.write(msgrequest);
+					dataout.flush(); 
+					s.setSoTimeout(interval);
+					
+					// just cycles through the garbage thats returned 
+					for (int c = 0; c < 13; c++) {
+						datain.readByte();
+					}
+					
+					byte [] peerresponse = new byte [16384];
+					for (int c = 0; c< size; c++){
+						peerresponse [c] = datain.readByte();
+					}
+					savefile.write(peerresponse);
+					
+					// might not be needed
+					if (lastpiecelength < 0 )
+						break; 
+					
+					temp  = temp + count; 
+					
+				}
+			}
+			
+		}
+		
+		s.close();
+		datain.close(); 
+		dataout.close();
+		savefile.close();
 		
 		
 		return true; 
@@ -225,6 +347,19 @@ public class BTClient {
 	  }
 	  
 	
+	public static  int fromEndianArray(byte[] x){
+	    ByteBuffer temp = ByteBuffer.wrap(x);
+	    temp.order(ByteOrder.BIG_ENDIAN);
+	    return temp.getInt();
+	}
+	  
+	public static byte[] toEndianArray(int x){
+	    ByteBuffer temp = ByteBuffer.allocate(4);
+	    temp.order(ByteOrder.BIG_ENDIAN);
+	    temp.putInt(x);
+	    temp.flip();
+	    return temp.array();
+	}
 
 	
 	private static void closer(){
