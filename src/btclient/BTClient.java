@@ -133,7 +133,7 @@ public class BTClient {
 		
 		dataout.write(toShake);
 		dataout.flush(); 
-		s.setSoTimeout(interval);
+		s.setSoTimeout(1000);
 		
 		byte[] fromShake=new byte[100]; 
 		datain.readFully(fromShake); 
@@ -162,7 +162,7 @@ public class BTClient {
 		
 			dataout.write(interested);
 			dataout.flush(); 
-			s.setSoTimeout(interval);
+			s.setSoTimeout(1000);
 		
 		
 		
@@ -200,7 +200,7 @@ public class BTClient {
 					// send it
 					dataout.write(msgrequest);
 					dataout.flush();
-					s.setSoTimeout(interval);
+					s.setSoTimeout(1000);
 					
 					// just cycles through the garbage thats returned 
 					for (int c = 0; c < 13; c++) {
@@ -235,7 +235,7 @@ public class BTClient {
 					
 					dataout.write(msgrequest);
 					dataout.flush(); 
-					s.setSoTimeout(interval);
+					s.setSoTimeout(1000);
 					
 					// just cycles through the garbage thats returned 
 					for (int c = 0; c < 13; c++) {
