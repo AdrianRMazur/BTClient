@@ -105,14 +105,14 @@ public class BTClient {
 		ArrayList availablepeers = (ArrayList)obj.get(ByteBuffer.wrap(new byte [] {'p','e','e','r','s'}));
 		
 		Map<ByteBuffer, Object> firstpeer = (Map<ByteBuffer, Object>) availablepeers.get(0);
-		
+		ToolKit.print(firstpeer); 
+		/*This dun be messed up*/
+		//int interval = 0;//(Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'i','n','t','e','r','v','a','l'})));
 		int peerport = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'p','o','r','t'})));
 		String peerip = new String (((ByteBuffer) firstpeer.get((ByteBuffer.wrap(new byte [] {'i','p'})))).array(), "ASCII");
-		int interval = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'i', 'n','t','e','r','v','a','l'})));
+		
 		
 		/*lets start making a socket*/
-		
-		// looks too copied. gonna have to change some shit up
 		
 		Socket s = new Socket(peerip, peerport);
 
