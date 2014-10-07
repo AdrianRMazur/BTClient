@@ -76,7 +76,7 @@ public class BTClient {
 			closer(); 
 		}
 		
-		
+		System.out.println("made it to validatepeers");
 		if ( validatePeers(serverreply,torrentinfo) == false){
 			closer(); 
 		}
@@ -105,7 +105,7 @@ public class BTClient {
 		ArrayList availablepeers = (ArrayList)obj.get(ByteBuffer.wrap(new byte [] {'p','e','e','r','s'}));
 		
 		Map<ByteBuffer, Object> firstpeer = (Map<ByteBuffer, Object>) availablepeers.get(0);
-		ToolKit.print(firstpeer); 
+	//	ToolKit.print(firstpeer); 
 		/*This dun be messed up*/
 		//int interval = 0;//(Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'i','n','t','e','r','v','a','l'})));
 		int peerport = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'p','o','r','t'})));
@@ -162,21 +162,25 @@ public class BTClient {
 		
 			dataout.write(interested);
 			dataout.flush(); 
-			s.setSoTimeout(1000);
+			s.setSoTimeout(10000);
 		
-		
+		System.out.println("made it before the loop");
 		
 			// check ID if the peer is saying to unchoke
 			for (int c = 0; c<5; c++){
-				if(datain.readByte()==1 && c ==4){
-					unchoke = true; 
+				//datain.readByte();
+				System.out.println(datain.readByte());
+				if (c==4){
+					//if (datain.readByte() ==1){
+						//unchoke = true; 
+				//	}
 				}
 			}
 		}
 		
 		// peer is ready
 		
-	
+	System.out.println("made it here");
 		
 		 
 		
