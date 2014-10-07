@@ -118,7 +118,10 @@ public class BTClient {
 	
 		byte[] toShake=new byte[100]; 
 		toShake[0]= (byte) 19;
-		System.arraycopy("BitTorrent protocol".getBytes(), 0, toShake, 1, 19); 
+		System.arraycopy("BitTorrent protocol".getBytes(), 0, toShake, 1, 19);
+		for (int c =20; c<28; c++){
+			toShake[c] = (byte) 0; 
+		}
 		System.arraycopy(torrentinfo.info_hash.array(), 0, toShake, 28, 20); 
 		System.arraycopy("AdrianAndKosti".getBytes(), 0, toShake, 48, 14 );
 		
