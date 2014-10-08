@@ -4,30 +4,21 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 public class BTClient {
 
@@ -69,19 +60,16 @@ public class BTClient {
 			e.printStackTrace();
 			closer(); 
 		}
-
+		
 	
 		byte [] serverreply = EstablishConnection(torrentinfo);
 		if (serverreply == null){
 			closer(); 
 		}
 		
-		System.out.println("made it to validatepeers");
 		if ( validatePeers(serverreply,torrentinfo) == false){
 			closer(); 
 		}
-		
-		
 		
 	}
 	
@@ -90,47 +78,32 @@ public class BTClient {
 	
 	
 	private static boolean validatePeers (byte [] fromServer1, TorrentInfo torrentinfo) throws Exception{
-		System.out.println("LOLOLOLOLOL");
 		Map<ByteBuffer,Object> obj = null;
 		try {
-		
 			obj=(Map<ByteBuffer, Object>)Bencoder2.decode(fromServer1);
 		} catch (BencodingException e) {
-			
-			e.printStackTrace();
+			return false; 		
 		} 
 		
 		
-		
 		ArrayList availablepeers = (ArrayList)obj.get(ByteBuffer.wrap(new byte [] {'p','e','e','r','s'}));
-		//ToolKit.print(availablepeers);
 		Map<ByteBuffer, Object> firstpeer = (Map<ByteBuffer, Object>) availablepeers.get(0);
-		//ToolKit.print(firstpeer); 
-		/*This dun be messed up*/
-		//int interval = 0;//(Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'i','n','t','e','r','v','a','l'})));
 		int peerport = (Integer)firstpeer.get((ByteBuffer.wrap(new byte [] {'p','o','r','t'})));
-		String peerip = new String (((ByteBuffer) firstpeer.get((ByteBuffer.wrap(new byte [] {'i','p'})))).array(), "ASCII");
-		
-		
-		/*lets start making a socket*/
+		String peerip = new String (((ByteBuffer) firstpeer.get((ByteBuffer.wrap(new byte [] {'i','p'})))).array(), "ASCII");	
 		
 		Socket s = new Socket(peerip, peerport);
-		
-
 		InputStream input= s.getInputStream();
 		OutputStream output = s.getOutputStream(); 
 		DataOutputStream dataout= new DataOutputStream(output);
 		DataInputStream datain=new DataInputStream(input);
 		
 	
-		byte[] toShake=new byte[68]; //Maybe make this 68?
+		byte[] toShake=new byte[68]; 
 		toShake[0]= (byte) 19;
 		byte [] bittorrent = new byte [] {'B','i','t','T','o','r','r','e','n','t',' ','p','r','o','t','o','c','o','l'};
 		
 		System.arraycopy(bittorrent, 0, toShake, 1, 19);
-	//	for (int c =20; c<28; c++){
-		//	toShake[c] = (byte) 0; 
-		//}
+
 		System.arraycopy(torrentinfo.info_hash.array(), 0, toShake, 28, 20); 
 		System.arraycopy("AdrianAndKosti@@@@@@".getBytes(), 0, toShake, 48, 20 ); // too short???
 		dataout.write(toShake);
@@ -143,103 +116,74 @@ public class BTClient {
 		
 		byte[] infohashpart = Arrays.copyOfRange(fromShake, 28, 48);
 		
-		System.out.println(infohashpart);
-		System.out.println(torrentinfo.info_hash.array());
-		// if not equal then handshake failed
 		if (Arrays.equals(infohashpart, torrentinfo.info_hash.array()) == false){
-			System.out.println("handshake failed son");
 			s.close(); 
 			dataout.close();
 			datain.close(); 
-			
 			return false; 
 		}
-		
-		// file download begins here...
-		
-		boolean unchoke = false; 
-		
-		// calculates the length of the last piece 
+	
+		boolean unchoke = false; 	
 		int lastpiecelength = torrentinfo.file_length - (torrentinfo.piece_length * (torrentinfo.piece_hashes.length-1));
-		System.out.println(torrentinfo.piece_hashes.length);
-
-		// loop through random bytes
+		
 		for (;;){
 			if (datain.readByte() ==-2)
 				break;  		
 		}
-		
-		
+				
 		
 		while (unchoke == false ){
-			byte [] interested = new byte [5];
-			
+			byte [] interested = new byte [5];	
 			System.arraycopy(toEndianArray(1), 0, interested, 0, 4);
 			interested[4] = (byte) 2;
-		
 			dataout.write(interested);
 			dataout.flush(); 
-			s.setSoTimeout(13000000);
-		
-			System.out.println("im interested");
-		
-			// check ID if the peer is saying to unchoke
-			for (int c = 0; c<5; c++){
+			s.setSoTimeout(1300000);
 			
+			for (int c = 0; c<5; c++){
 				if (c==4){
 					if (datain.readByte() ==1){
 						unchoke = true; 
 						break; 
 					}
 				}
-				System.out.println(datain.readByte());
+				datain.readByte();
 			}
-		}
-		
-		// peer is ready
+		}		
 		
 		 
-		// loop for each block 
 		for (int count = 0; count <torrentinfo.piece_hashes.length; count++){
 			int temp = 0; 
-			// current block might have more data 
 			for (;;){
-				// building request message
 				byte [] msgrequest = new byte [17];
 				System.arraycopy(toEndianArray(13), 0, msgrequest, 0, 4);
 				msgrequest[4] = (byte)6;
-				// all the block 
-				if (count < torrentinfo.piece_hashes.length){
-					// build the message
+				if (count < torrentinfo.piece_hashes.length-1){
 					System.arraycopy(toEndianArray(count), 0, msgrequest, 5, 4);
 					System.arraycopy(toEndianArray(temp), 0, msgrequest, 9, 4);
 					System.arraycopy(toEndianArray(16384), 0, msgrequest, 13, 4);
 					
-					// send it
 					dataout.write(msgrequest);
 					dataout.flush();
 					s.setSoTimeout(130000);
 					
-					// just cycles through the garbage thats returned 
-					//for (int c = 0; c < 4; c++) {
-						//System.out.println(datain.readByte());
-					//}
-System.out.println(count);					// the part we need
+					for (int i = 0; i < 13; i++) {
+						 datain.readByte();
+					} 
+					
+				
 					byte [] peerresponse = new byte [16384];
 					for (int c = 0; c< 16384; c++){
-						//System.out.println("in here");
 						peerresponse [c] = datain.readByte();
 					}
-					// write to file
+					
 					savefile.write(peerresponse);
 				
-					//might not need this if/else pair idk yet
 					if (temp + 16384 == torrentinfo.piece_length)
 						break; 
 					else
 						temp = temp + 16384; 
 				}
-				// the last block 
 				else {
 					int size = 16384;  
 					if (lastpiecelength < 16384)
@@ -249,24 +193,22 @@ System.out.println(count);					// the part we need
 					
 					System.arraycopy(toEndianArray(count), 0, msgrequest, 5, 4);
 					System.arraycopy(toEndianArray(temp), 0, msgrequest, 9, 4);
-					System.arraycopy(toEndianArray(16384), 0, msgrequest, 13, 4);
+					System.arraycopy(toEndianArray(size), 0, msgrequest, 13, 4);
 					
 					dataout.write(msgrequest);
 					dataout.flush(); 
 					s.setSoTimeout(1000);
 					
-					// just cycles through the garbage thats returned 
-					for (int c = 0; c < 13; c++) {
-						datain.readByte();
-					}
-					
-					byte [] peerresponse = new byte [16384];
+					for (int i = 0; i < 13; i++) {
+						 datain.readByte();
+					} 
+	
+					byte [] peerresponse = new byte [size];
 					for (int c = 0; c< size; c++){
 						peerresponse [c] = datain.readByte();
 					}
 					savefile.write(peerresponse);
 					
-					// might not be needed
 					if (lastpiecelength < 0 )
 						break; 
 					
@@ -317,9 +259,7 @@ System.out.println(count);					// the part we need
 		
 		HttpURLConnection con =null;
 		DataInputStream in = null;
-		String tempinput=null;
 		
-		//int responsecode =0; 
 		byte [] serverreply = null; 
 		
 		try {
@@ -327,15 +267,9 @@ System.out.println(count);					// the part we need
 			in = new DataInputStream( con.getInputStream());
 	
 			
-			//responsecode = con.getResponseCode();
 			
 			serverreply = new byte[con.getContentLength()];
 			in.readFully(serverreply);
-			
-			
-			//while ((tempinput = in.readLine()) != null) {
-			//	serverreply.append(tempinput);
-			//} 
 			
 			in.close();
 		
@@ -344,12 +278,7 @@ System.out.println(count);					// the part we need
 			closer(); 
 			return null; 
 		}
-		/*
-		System.out.println("server returned code is: " + responsecode);
-		System.out.println("Server: "+ serverreply.toString());
-		Looks good, makes connection and returns peer information
-		*
-		*/
+	
 		con.disconnect(); 
 		
 		return serverreply;
@@ -364,12 +293,6 @@ System.out.println(count);					// the part we need
 		 return sb.toString();
 	  }
 	  
-	  
-		public static byte[] intToByteArray(int value) {
-			byte[] retVal = ByteBuffer.allocate(4).putInt(value).array();
-
-			return retVal;
-		}
 	
 	public static  int fromEndianArray(byte[] x){
 	    ByteBuffer temp = ByteBuffer.wrap(x);
