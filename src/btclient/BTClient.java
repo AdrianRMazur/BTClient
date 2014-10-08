@@ -229,11 +229,11 @@ public class BTClient {
 					// send it
 					dataout.write(msgrequest);
 					dataout.flush();
-					s.setSoTimeout(1000);
+					s.setSoTimeout(10000);
 					
 					// just cycles through the garbage thats returned 
 					for (int c = 0; c < 13; c++) {
-						datain.readByte();
+						System.out.println(datain.readByte());
 					}
 					
 					// the part we need
