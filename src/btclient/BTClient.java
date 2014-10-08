@@ -115,6 +115,8 @@ public class BTClient {
 		/*lets start making a socket*/
 		
 		Socket s = new Socket(peerip, peerport);
+	
+		
 
 		InputStream input= s.getInputStream();
 		OutputStream output = s.getOutputStream(); 
@@ -122,26 +124,33 @@ public class BTClient {
 		DataInputStream datain=new DataInputStream(input);
 		
 	
-		byte[] toShake=new byte[100]; 
+		byte[] toShake=new byte[100]; //Maybe make this 68?
 		toShake[0]= (byte) 19;
 		System.arraycopy("BitTorrent protocol".getBytes(), 0, toShake, 1, 19);
 		for (int c =20; c<28; c++){
 			toShake[c] = (byte) 0; 
 		}
 		System.arraycopy(torrentinfo.info_hash.array(), 0, toShake, 28, 20); 
-		System.arraycopy("AdrianAndKosti".getBytes(), 0, toShake, 48, 14 );
+		System.arraycopy("AdrianAndKosti@@@@@@".getBytes(), 0, toShake, 48, 20 ); // too short???
 		
 		dataout.write(toShake);
 		dataout.flush(); 
 		s.setSoTimeout(1000);
 		
-		byte[] fromShake=new byte[100]; 
+		byte[] fromShake=new byte[68]; 
 		datain.readFully(fromShake); 
+	
 		
 		byte[] infohashpart = Arrays.copyOfRange(fromShake, 28, 48);
 		
+		
 		// if not equal then handshake failed
 		if (Arrays.equals(infohashpart, torrentinfo.info_hash.array()) == false){
+			System.out.println("handshake failed son");
+			s.close(); 
+			dataout.close();
+			datain.close(); 
+			
 			return false; 
 		}
 		
@@ -154,28 +163,45 @@ public class BTClient {
 		
 		// tell the peer im interested
 		// 	loop until peer says unchoke
+		for (int c = 0; c<5; c++){
+			//datain.readByte();
+			System.out.println(datain.readByte());
+			//if (c==4){
+				//if (datain.readByte() ==1){
+					//unchoke = true; 
+			//	}
+			//}
+		}
+		
 		while (unchoke == false ){
-			byte [] interestedprefix = toEndianArray(1);
 			byte [] interested = new byte [5];
-			System.arraycopy(interestedprefix, 0, interested, 0, 4);
+
+			
+			
+		
+			System.arraycopy( intToByteArray(1), 0, interested, 0, 4);
 			interested[4] = (byte) 2;
+		
 		
 			dataout.write(interested);
 			dataout.flush(); 
-			s.setSoTimeout(10000);
+			s.setSoTimeout(13000000);
 		
-		System.out.println("made it before the loop");
+		System.out.println("im interested");
+		
 		
 			// check ID if the peer is saying to unchoke
-			for (int c = 0; c<5; c++){
-				//datain.readByte();
-				System.out.println(datain.readByte());
-				if (c==4){
-					//if (datain.readByte() ==1){
-						//unchoke = true; 
-				//	}
-				}
-			}
+		for (int c = 0; c<5; c++){
+			//datain.readByte();
+			System.out.println(datain.readByte());
+			//if (c==4){
+				//if (datain.readByte() ==1){
+					//unchoke = true; 
+			//	}
+			//}
+		}
+			
+			break; 
 		}
 		
 		// peer is ready
@@ -284,7 +310,7 @@ public class BTClient {
 			 temp.append('%').append(String.format("%02x", temp2 & 0xff));
 		infohash = temp.toString(); 
 	
-		temp = new StringBuilder(("AdrianAndKosti".getBytes().length) * 2);
+		temp = new StringBuilder(("AdrianAndKosti@@@@@@".getBytes().length) * 2);
 		for(byte temp2: torrentinfo.info_hash.array())
 			 temp.append('%').append(String.format("%02x", temp2 & 0xff));
 		peerid = temp.toString(); 
@@ -350,6 +376,12 @@ public class BTClient {
 		 return sb.toString();
 	  }
 	  
+	  
+		public static byte[] intToByteArray(int value) {
+			byte[] retVal = ByteBuffer.allocate(4).putInt(value).array();
+
+			return retVal;
+		}
 	
 	public static  int fromEndianArray(byte[] x){
 	    ByteBuffer temp = ByteBuffer.wrap(x);
@@ -365,6 +397,7 @@ public class BTClient {
 	    return temp.array();
 	}
 
+	
 	
 	private static void closer(){
 		System.out.println("Error: A critical error occured");
