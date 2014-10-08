@@ -133,7 +133,6 @@ public class BTClient {
 		//}
 		System.arraycopy(torrentinfo.info_hash.array(), 0, toShake, 28, 20); 
 		System.arraycopy("AdrianAndKosti@@@@@@".getBytes(), 0, toShake, 48, 20 ); // too short???
-		
 		dataout.write(toShake);
 		dataout.flush(); 
 		s.setSoTimeout(1000);
@@ -162,7 +161,7 @@ public class BTClient {
 		
 		// calculates the length of the last piece 
 		int lastpiecelength = torrentinfo.file_length - (torrentinfo.piece_length * (torrentinfo.piece_hashes.length-1));
-		
+		System.out.println(torrentinfo.piece_hashes.length);
 
 		// loop through random bytes
 		for (;;){
@@ -174,20 +173,15 @@ public class BTClient {
 		
 		while (unchoke == false ){
 			byte [] interested = new byte [5];
-
 			
-			
-		
-			System.arraycopy( intToByteArray(1), 0, interested, 0, 4);
+			System.arraycopy(toEndianArray(1), 0, interested, 0, 4);
 			interested[4] = (byte) 2;
-		
 		
 			dataout.write(interested);
 			dataout.flush(); 
 			s.setSoTimeout(13000000);
 		
 			System.out.println("im interested");
-		
 		
 			// check ID if the peer is saying to unchoke
 			for (int c = 0; c<5; c++){
@@ -200,24 +194,19 @@ public class BTClient {
 				}
 				System.out.println(datain.readByte());
 			}
-			
 		}
 		
 		// peer is ready
 		
-	System.out.println("made it here");
-		
 		 
-		
 		// loop for each block 
 		for (int count = 0; count <torrentinfo.piece_hashes.length; count++){
 			int temp = 0; 
 			// current block might have more data 
 			for (;;){
 				// building request message
-				byte [] msgrequestprefix = toEndianArray(16384);
 				byte [] msgrequest = new byte [17];
-				System.arraycopy(msgrequestprefix, 0, msgrequest, 0, 4);
+				System.arraycopy(toEndianArray(13), 0, msgrequest, 0, 4);
 				msgrequest[4] = (byte)6;
 				// all the block 
 				if (count < torrentinfo.piece_hashes.length){
@@ -229,16 +218,16 @@ public class BTClient {
 					// send it
 					dataout.write(msgrequest);
 					dataout.flush();
-					s.setSoTimeout(10000);
+					s.setSoTimeout(130000);
 					
 					// just cycles through the garbage thats returned 
-					for (int c = 0; c < 13; c++) {
-						System.out.println(datain.readByte());
-					}
-					
-					// the part we need
+					//for (int c = 0; c < 4; c++) {
+						//System.out.println(datain.readByte());
+					//}
+System.out.println(count);					// the part we need
 					byte [] peerresponse = new byte [16384];
 					for (int c = 0; c< 16384; c++){
+						//System.out.println("in here");
 						peerresponse [c] = datain.readByte();
 					}
 					// write to file
